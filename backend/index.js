@@ -10,47 +10,52 @@ const storeRoutes = require("./routes/storeRoutes");
 const storeOwnerRoutes = require("./routes/storeOwnerRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
 
-
 const app = express();
-
 const port = process.env.PORT || 3000;
 
 // =========================
 // CORS
 // =========================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://store-rating-app-ashen.vercel.app",
+];
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-    ],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false,
   })
 );
+
+app.options(/.*/, cors());
 
 // =========================
 // Middleware
 // =========================
-
 app.use(express.json());
 
 // =========================
 // Routes
 // =========================
-
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/store-owner", storeOwnerRoutes);
 app.use("/api/ratings", ratingRoutes);
 
-
 // =========================
 // Test route
 // =========================
-
 app.get("/", (req, res) => {
   res.send("Store Rating API is running!");
 });
@@ -58,7 +63,6 @@ app.get("/", (req, res) => {
 // =========================
 // Database connection test
 // =========================
-
 app.get("/api/db-test", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT 1 AS result");
@@ -82,7 +86,6 @@ app.get("/api/db-test", async (req, res) => {
 // =========================
 // Start server
 // =========================
-
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
